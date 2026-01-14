@@ -6,27 +6,22 @@ import (
 	"traingolang/internal/config"
 	"traingolang/internal/repository"
 
-	// "traingolang/internal/websocket"
-
 	"github.com/gin-gonic/gin"
 )
 
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
-	// r.MaxMultipartMemory = 1 << 20
+	r.SetTrustedProxies(nil)
 	postRepo := repository.NewPostRepo(config.DB)
 	imageRepo := repository.NewImageRepository(config.DB)
-	// PUBLIC ROUTES
+	r.POST("/analyze", auth.LimitUploadSize(1<<20), handler.AnalyzeImage)
+	// r.POST("/api/cv/ocr", auth.LimitUploadSize(1<<20), handler.AnalyzeCV)
 	r.POST("/api/user/register", handler.Register)
 	r.POST("/api/user/login", handler.Login)
 	r.POST("/api/search/post", handler.SearchPostsHandler(postRepo))
-	r.GET(
-		"/api/posts/options",
-		handler.GetPostOptionsHandler(postRepo),
-	)
-	// PROTECTED ROUTES
+	r.GET("/api/posts/options", handler.GetPostOptionsHandler(postRepo))
+
 	api := r.Group("/api")
-	api.Use(auth.Middleware())
 	{
 		api.POST("/match/create", handler.CreateMatch)
 		api.POST("/match/join", handler.JoinMatch)
@@ -39,17 +34,19 @@ func SetupRouter() *gin.Engine {
 			auth.LimitUploadSize(1<<20),
 			handler.CreatePost(postRepo, imageRepo),
 		)
-		api.POST("/update/post/:id",
+
+		api.POST(
+			"/update/post/:id",
 			auth.AdminOnly(),
 			auth.LimitUploadSize(1<<20),
 			handler.UpdatePost(postRepo, imageRepo),
 		)
 
-		api.POST("/delete/post/:id",
+		api.POST(
+			"/delete/post/:id",
 			auth.AdminOnly(),
 			handler.DeletePost(postRepo, imageRepo),
 		)
-
 	}
 
 	return r
