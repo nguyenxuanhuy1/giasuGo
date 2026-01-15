@@ -21,7 +21,6 @@ func NewPagination(page, pageSize int) (offset, limit int) {
 	return
 }
 
-// SỬA Ở ĐÂY
 func Paginate[T any](
 	db *sql.DB,
 	query string,

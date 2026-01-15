@@ -14,7 +14,7 @@ func SetupRouter() *gin.Engine {
 	r.SetTrustedProxies(nil)
 	postRepo := repository.NewPostRepo(config.DB)
 	imageRepo := repository.NewImageRepository(config.DB)
-	r.POST("/analyze", auth.LimitUploadSize(1<<20), handler.AnalyzeImage)
+	r.POST("/api/analyze", auth.LimitUploadSize(1<<20), handler.AnalyzeImage)
 	// r.POST("/api/cv/ocr", auth.LimitUploadSize(1<<20), handler.AnalyzeCV)
 	r.POST("/api/user/register", handler.Register)
 	r.POST("/api/user/login", handler.Login)

@@ -63,7 +63,14 @@ func AnalyzeImage(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"result": json.RawMessage(result),
-	})
+	var parsed any
+	if err := json.Unmarshal([]byte(result), &parsed); err != nil {
+		c.JSON(500, gin.H{
+			"error": "invalid json",
+			"raw":   result,
+		})
+		return
+	}
+
+	c.JSON(200, parsed)
 }

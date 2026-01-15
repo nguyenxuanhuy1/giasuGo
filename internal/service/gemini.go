@@ -74,7 +74,7 @@ func AnalyzeImageWithGemini(
 	req.Header.Set("x-goog-api-key", os.Getenv("GEMINI_API_KEY"))
 
 	client := &http.Client{
-		Timeout: 30 * time.Second,
+		Timeout: 90 * time.Second,
 	}
 
 	resp, err := client.Do(req)
