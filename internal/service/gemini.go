@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -23,6 +24,7 @@ type geminiResponse struct {
 }
 
 func AnalyzeImageWithGemini(
+	ctx context.Context,
 	image []byte,
 	mimeType string,
 	prompt string,
@@ -61,7 +63,9 @@ func AnalyzeImageWithGemini(
 		return "", err
 	}
 
-	req, err := http.NewRequest(
+	// Quan trọng: Sử dụng context để có thể cancel request
+	req, err := http.NewRequestWithContext(
+		ctx,
 		http.MethodPost,
 		os.Getenv("GEMINI_URL"),
 		bytes.NewBuffer(body),
