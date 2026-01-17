@@ -5,6 +5,7 @@ import (
 	"traingolang/internal/auth"
 	"traingolang/internal/config"
 	"traingolang/internal/repository"
+	"traingolang/internal/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,12 +15,17 @@ func SetupRouter() *gin.Engine {
 	r.SetTrustedProxies(nil)
 	postRepo := repository.NewPostRepo(config.DB)
 	imageRepo := repository.NewImageRepository(config.DB)
+	examService := service.NewExamService(config.DB)
 	r.POST("/api/analyze", auth.LimitUploadSize(1<<20), handler.AnalyzeImage)
 	// r.POST("/api/cv/ocr", auth.LimitUploadSize(1<<20), handler.AnalyzeCV)
 	r.POST("/api/user/register", handler.Register)
 	r.POST("/api/user/login", handler.Login)
 	r.POST("/api/search/post", handler.SearchPostsHandler(postRepo))
 	r.GET("/api/posts/options", handler.GetPostOptionsHandler(postRepo))
+	r.POST(
+		"/api/exams/submit",
+		handler.SubmitExamHandler(examService),
+	)
 
 	api := r.Group("/api")
 	{

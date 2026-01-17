@@ -44,9 +44,7 @@ func AnalyzeImageWithGemini(
 		"contents": []map[string]interface{}{
 			{
 				"parts": []map[string]interface{}{
-					{
-						"text": prompt,
-					},
+					{"text": prompt},
 					{
 						"inline_data": map[string]string{
 							"mime_type": mimeType,
@@ -63,7 +61,6 @@ func AnalyzeImageWithGemini(
 		return "", err
 	}
 
-	// Quan trọng: Sử dụng context để có thể cancel request
 	req, err := http.NewRequestWithContext(
 		ctx,
 		http.MethodPost,
@@ -77,9 +74,7 @@ func AnalyzeImageWithGemini(
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("x-goog-api-key", os.Getenv("GEMINI_API_KEY"))
 
-	client := &http.Client{
-		Timeout: 90 * time.Second,
-	}
+	client := &http.Client{Timeout: 120 * time.Second}
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -106,6 +101,16 @@ func AnalyzeImageWithGemini(
 		return "", errors.New("no response from gemini")
 	}
 
-	result := geminiResp.Candidates[0].Content.Parts[0].Text
-	return strings.TrimSpace(result), nil
+	raw := strings.TrimSpace(
+		geminiResp.Candidates[0].Content.Parts[0].Text,
+	)
+
+	jsonStr, err := ExtractJSON(raw)
+	if err != nil {
+		return "", err
+	}
+
+	jsonStr = strings.ReplaceAll(jsonStr, `\`, `\\`)
+
+	return jsonStr, nil
 }
