@@ -24,20 +24,16 @@ func AnalyzeImage(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), RequestTimeout)
 	defer cancel()
 
-	// Parse multipart form
 	if err := c.Request.ParseMultipartForm(20 << 20); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid multipart form"})
 		return
 	}
 
-	// === NHẬN NHIỀU ẢNH ===
 	files := c.Request.MultipartForm.File["images"]
 	if len(files) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "images are required"})
 		return
 	}
-
-	// Prompt handling
 	mode := c.PostForm("mode")
 	customPrompt := c.PostForm("prompt")
 
@@ -50,7 +46,6 @@ func AnalyzeImage(c *gin.Context) {
 		}
 	}
 
-	// Đọc ảnh vào slice
 	var images []service.ImageInput
 
 	for _, file := range files {
@@ -73,7 +68,7 @@ func AnalyzeImage(c *gin.Context) {
 		})
 	}
 
-	// === LIMIT CONCURRENT GEMINI REQUESTS ===
+	// giới hạn câu hỏi
 	select {
 	case geminiSemaphore <- struct{}{}:
 		defer func() { <-geminiSemaphore }()
@@ -85,7 +80,6 @@ func AnalyzeImage(c *gin.Context) {
 		return
 	}
 
-	// === CALL GEMINI (MULTI IMAGE) ===
 	jsonStr, err := service.AnalyzeImagesWithGemini(
 		ctx,
 		images,
@@ -100,7 +94,6 @@ func AnalyzeImage(c *gin.Context) {
 		return
 	}
 
-	// Validate JSON
 	var parsed any
 	if err := json.Unmarshal([]byte(jsonStr), &parsed); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

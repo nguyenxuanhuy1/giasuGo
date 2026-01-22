@@ -10,7 +10,6 @@ create table users (
    created_at timestamptz default now()
 );
 
--- Index để tìm kiếm
 create index idx_users_google_id on
    users (
       google_id
@@ -22,7 +21,7 @@ create index idx_users_email on
 
 create table exam_sets (
    id         bigserial primary key,
-   name       varchar(255) not null,        -- tên đề
+   name       varchar(255) not null,
    created_by integer not null
       references users ( id )
          on delete cascade,
@@ -39,9 +38,8 @@ create table exam_questions (
    content        text not null,
    type           text not null,              -- single | multiple | essay
    level          text default 'question',
-   options        jsonb,                       -- FE gửi
-   correct_answer jsonb,                       -- FE gửi
-
+   options        jsonb,
+   correct_answer jsonb,
    order_no       integer not null,
    parent_order   integer,
    created_at     timestamptz default now()
