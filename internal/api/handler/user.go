@@ -1,0 +1,149 @@
+package handler
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+
+	"traingolang/internal/auth"
+	"traingolang/internal/config"
+	"traingolang/internal/repository"
+
+	"github.com/gin-gonic/gin"
+	"golang.org/x/oauth2"
+)
+
+type GoogleUserInfo struct {
+	ID            string `json:"id"`
+	Email         string `json:"email"`
+	VerifiedEmail bool   `json:"verified_email"`
+	Name          string `json:"name"`
+	Picture       string `json:"picture"`
+}
+
+/*  GOOGLE LOGIN  */
+
+func GoogleLogin(c *gin.Context) {
+	url := config.GoogleOAuthConfig.AuthCodeURL(
+		"state",
+		oauth2.SetAuthURLParam("prompt", "select_account"),
+	)
+	c.Redirect(http.StatusTemporaryRedirect, url)
+}
+
+func GoogleCallback(c *gin.Context) {
+	redirectBase := config.Config.FrontendAuthRedirectURL
+	code := c.Query("code")
+	if code == "" {
+		c.Redirect(http.StatusTemporaryRedirect,
+			redirectBase+"?error=missing_code")
+		return
+	}
+
+	token, err := config.GoogleOAuthConfig.Exchange(context.Background(), code)
+	if err != nil {
+		c.Redirect(http.StatusTemporaryRedirect,
+			redirectBase+"?error=exchange_failed")
+		return
+	}
+
+	// API chuẩn OpenID
+	resp, err := http.Get(
+		"https://openidconnect.googleapis.com/v1/userinfo?access_token=" + token.AccessToken,
+	)
+	if err != nil {
+		c.Redirect(http.StatusTemporaryRedirect,
+			redirectBase+"?error=get_userinfo_failed")
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.Redirect(http.StatusTemporaryRedirect,
+			redirectBase+"?error=read_userinfo_failed")
+		return
+	}
+
+	var googleUser GoogleUserInfo
+	if err := json.Unmarshal(body, &googleUser); err != nil {
+		c.Redirect(http.StatusTemporaryRedirect,
+			redirectBase+"?error=parse_userinfo_failed")
+		return
+	}
+
+	username := googleUser.Name
+
+	userRepo := repository.NewUserRepository(config.DB)
+	user, err := userRepo.FindOrCreateByGoogle(
+		googleUser.ID,
+		googleUser.Email,
+		username,
+		googleUser.Picture,
+	)
+	if err != nil {
+		fmt.Println("FindOrCreateByGoogle:", err)
+		c.Redirect(http.StatusTemporaryRedirect,
+			redirectBase+"?error=create_user_failed")
+		return
+	}
+
+	if user.Locked {
+		c.Redirect(http.StatusTemporaryRedirect,
+			redirectBase+"?error=account_locked")
+		return
+	}
+
+	accessToken, err := auth.GenerateAccessToken(user.ID, user.Role)
+	if err != nil {
+		c.Redirect(http.StatusTemporaryRedirect,
+			redirectBase+"?error=generate_token_failed")
+		return
+	}
+
+	refreshToken, err := auth.GenerateRefreshToken(user.ID)
+	if err != nil {
+		c.Redirect(http.StatusTemporaryRedirect,
+			redirectBase+"?error=generate_refresh_token_failed")
+		return
+	}
+
+	redirectURL := fmt.Sprintf(
+		redirectBase+"?accessToken=%s&refreshToken=%s",
+		accessToken,
+		refreshToken,
+	)
+	c.Redirect(http.StatusTemporaryRedirect, redirectURL)
+}
+
+/*  PROFILE  */
+
+func Profile(c *gin.Context) {
+	claimsAny, exists := c.Get(auth.ContextUserKey)
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	claims, ok := claimsAny.(*auth.Claims)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+		return
+	}
+
+	userRepo := repository.NewUserRepository(config.DB)
+	user, err := userRepo.FindByID(claims.UserID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"username": user.Username,
+		"avatar":   user.Avatar,
+		// "email":    user.Email,
+		"role": user.Role,
+	})
+}
