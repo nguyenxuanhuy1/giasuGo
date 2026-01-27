@@ -33,6 +33,10 @@ func SetupRouter() *gin.Engine {
 			auth.LimitUploadSize(1<<20),
 			handler.AnalyzeImage,
 		)
+		public.POST(
+			"/analyze/question",
+			handler.AnalyzeQuestion,
+		)
 	}
 
 	// AUTH ROUTES (BẮT BUỘC TOKEN)
