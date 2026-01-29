@@ -15,7 +15,6 @@ type Claims struct {
 	Role   string `json:"role"`
 }
 
-// ===== ACCESS TOKEN (15 PHÚT) =====
 func GenerateAccessToken(userID int64, role string) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
@@ -28,7 +27,6 @@ func GenerateAccessToken(userID int64, role string) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
-// ===== REFRESH TOKEN (1 GIỜ) =====
 func GenerateRefreshToken(userID int64) (string, error) {
 	claims := jwt.MapClaims{
 		"user_id": userID,
@@ -40,7 +38,6 @@ func GenerateRefreshToken(userID int64) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
-// ===== PARSE TOKEN =====
 func ParseToken(tokenStr string) (*Claims, error) {
 	token, err := jwt.Parse(tokenStr, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {

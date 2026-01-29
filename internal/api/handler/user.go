@@ -23,6 +23,10 @@ type GoogleUserInfo struct {
 	Picture       string `json:"picture"`
 }
 
+type RefreshTokenRequest struct {
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
 /*  GOOGLE LOGIN  */
 
 func GoogleLogin(c *gin.Context) {
@@ -145,5 +149,43 @@ func Profile(c *gin.Context) {
 		"avatar":   user.Avatar,
 		// "email":    user.Email,
 		"role": user.Role,
+	})
+}
+func RefreshToken(c *gin.Context) {
+	var req RefreshTokenRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "refresh_token is required",
+		})
+		return
+	}
+
+	refreshClaims, err := auth.ParseRefreshToken(req.RefreshToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "invalid refresh token",
+		})
+		return
+	}
+
+	userRepo := repository.NewUserRepository(config.DB)
+	user, err := userRepo.FindByID(refreshClaims.UserID)
+	if err != nil || user.Locked {
+		c.JSON(http.StatusUnauthorized, gin.H{
+			"error": "user not found or locked",
+		})
+		return
+	}
+
+	accessToken, err := auth.GenerateAccessToken(user.ID, user.Role)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "could not generate access token",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"accessToken": accessToken,
 	})
 }

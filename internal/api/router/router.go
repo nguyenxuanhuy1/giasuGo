@@ -24,24 +24,23 @@ func SetupRouter() *gin.Engine {
 		// Google OAuth routes
 		public.GET("/auth/google", handler.GoogleLogin)
 		public.GET("/auth/google/callback", handler.GoogleCallback)
-
-		public.POST("/search/post", handler.SearchPostsHandler(postRepo))
+		public.POST("/auth/refresh", handler.RefreshToken)
 		public.GET("/posts/options", handler.GetPostOptionsHandler(postRepo))
 
-		public.POST(
-			"/analyze",
-			auth.LimitUploadSize(1<<20),
-			handler.AnalyzeImage,
-		)
-		public.POST(
-			"/analyze/question",
-			handler.AnalyzeQuestion,
-		)
 	}
 
 	// AUTH ROUTES (BẮT BUỘC TOKEN)
 	authGroup := r.Group("/api", auth.Middleware())
 	{
+		authGroup.POST(
+			"/analyze",
+			auth.LimitUploadSize(1<<20),
+			handler.AnalyzeImage,
+		)
+		authGroup.POST(
+			"/analyze/question",
+			handler.AnalyzeQuestion,
+		)
 		authGroup.POST(
 			"/exams/submit",
 			handler.SubmitExamHandler(examService),
