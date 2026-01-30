@@ -185,7 +185,16 @@ func RefreshToken(c *gin.Context) {
 		return
 	}
 
+	refreshToken, err := auth.GenerateRefreshToken(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "could not generate refresh token",
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"accessToken": accessToken,
+		"accessToken":  accessToken,
+		"refreshToken": refreshToken,
 	})
 }
