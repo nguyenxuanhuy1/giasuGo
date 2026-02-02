@@ -33,3 +33,11 @@ type ExamSetItem struct {
 	IsPublic  bool      `json:"is_public"`
 	CreatedAt time.Time `json:"created_at"`
 }
+type ExamAttemptItem struct {
+	AttemptID   int64      `json:"attempt_id"`
+	ExamSetID   int64      `json:"exam_set_id"`
+	ExamName    string     `json:"exam_name"`
+	IsPublic    bool       `json:"is_public"`
+	StartedAt   time.Time  `json:"started_at"`
+	SubmittedAt *time.Time `json:"submitted_at,omitempty"`
+}

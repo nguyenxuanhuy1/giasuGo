@@ -129,3 +129,33 @@ func (s *ExamService) GetMyExamSets(
 
 	return s.Repo.GetMyExamSets(userID)
 }
+
+func (s *ExamService) GetMyExamHistory(
+	userID int,
+) ([]model.ExamAttemptItem, error) {
+
+	return s.Repo.GetMyExamAttempts(userID)
+}
+
+func (s *ExamService) GetQuestionsByExamSet(
+	examSetID int64,
+) ([]model.QuestionDTO, error) {
+
+	tx, err := s.DB.Begin()
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback()
+
+	questions, err := s.Repo.GetQuestionsByExamSet(tx, examSetID)
+	if err != nil {
+		return nil, err
+	}
+
+	// vì đây là API xem đề → chưa có user_answer
+	for i := range questions {
+		questions[i].UserAnswer = nil
+	}
+
+	return questions, tx.Commit()
+}

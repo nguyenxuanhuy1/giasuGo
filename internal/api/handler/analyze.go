@@ -34,6 +34,13 @@ func AnalyzeImage(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "images are required"})
 		return
 	}
+	const MaxImages = 4
+	if len(files) > MaxImages {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "maximum 4 images are allowed",
+		})
+		return
+	}
 	mode := c.PostForm("mode")
 	customPrompt := c.PostForm("prompt")
 

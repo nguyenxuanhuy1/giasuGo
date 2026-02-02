@@ -180,3 +180,44 @@ func (r *ExamRepo) GetMyExamSets(
 
 	return result, nil
 }
+
+func (r *ExamRepo) GetMyExamAttempts(
+	userID int,
+) ([]model.ExamAttemptItem, error) {
+
+	rows, err := r.DB.Query(`
+		select
+			ea.id,
+			es.id,
+			es.name,
+			es.is_public,
+			ea.started_at,
+			ea.submitted_at
+		from exam_attempts ea
+		join exam_sets es on es.id = ea.exam_set_id
+		where ea.user_id = $1
+		order by ea.started_at desc
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result []model.ExamAttemptItem
+	for rows.Next() {
+		var item model.ExamAttemptItem
+		if err := rows.Scan(
+			&item.AttemptID,
+			&item.ExamSetID,
+			&item.ExamName,
+			&item.IsPublic,
+			&item.StartedAt,
+			&item.SubmittedAt,
+		); err != nil {
+			return nil, err
+		}
+		result = append(result, item)
+	}
+
+	return result, nil
+}
