@@ -47,12 +47,11 @@ func SetupRouter() *gin.Engine {
 		)
 
 		authGroup.GET("/user/info", handler.Profile)
-		authGroup.GET("/exams/history", handler.GetMyExamHistoryHandler(examService))
 		authGroup.POST("/match/create", handler.CreateMatch)
 		authGroup.POST("/match/join", handler.JoinMatch)
 		authGroup.POST("/upload", handler.UploadHandler)
 		authGroup.GET("/exam-sets/redo/:id", handler.RedoExamHandler(examService))
-		authGroup.GET("/my/exam-sets", handler.GetMyExamSetsHandler(examService))
+		authGroup.GET("/exams/history", handler.GetMyExamSetsHandler(examService))
 
 	}
 
