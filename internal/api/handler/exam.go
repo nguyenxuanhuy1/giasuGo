@@ -110,7 +110,8 @@ func GetMyExamSetsHandler(examService *service.ExamService) gin.HandlerFunc {
 		})
 	}
 }
-func GetMyExamHistoryHandler(
+
+func GetExamQuestionsHandler(
 	examService *service.ExamService,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -125,16 +126,28 @@ func GetMyExamHistoryHandler(
 
 		userID := int(claims.UserID)
 
-		history, err := examService.GetMyExamHistory(userID)
+		examSetID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "invalid exam_set_id",
+			})
+			return
+		}
+
+		questions, err := examService.GetExamQuestionsForUser(
+			examSetID,
+			userID,
+		)
+		if err != nil {
+			c.JSON(http.StatusForbidden, gin.H{
 				"error": err.Error(),
 			})
 			return
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"data": history,
+			"exam_set_id": examSetID,
+			"questions":   questions,
 		})
 	}
 }

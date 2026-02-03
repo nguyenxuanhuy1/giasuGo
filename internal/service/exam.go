@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+	"errors"
 
 	"traingolang/internal/model"
 	"traingolang/internal/repository"
@@ -34,9 +35,12 @@ func (s *ExamService) SubmitExam(
 	examSetID, err := s.Repo.CreateExamSet(
 		tx,
 		req.ExamName,
+		req.SchoolName,
+		req.Extend,
 		userID,
 		req.IsPublic,
 	)
+
 	if err != nil {
 		return 0, 0, err
 	}
@@ -88,19 +92,14 @@ func (s *ExamService) RedoExam(
 	}
 	defer tx.Rollback()
 
-	// 1. Lấy exam_set
 	exam, err := s.Repo.GetExamSetByID(tx, examSetID)
 	if err != nil {
 		return nil, err
 	}
-
-	// 2. Lấy danh sách câu hỏi
 	questions, err := s.Repo.GetQuestionsByExamSet(tx, examSetID)
 	if err != nil {
 		return nil, err
 	}
-
-	// 3. Tạo attempt mới
 	attemptID, err := s.Repo.CreateAttempt(tx, examSetID, userID)
 	if err != nil {
 		return nil, err
@@ -110,7 +109,6 @@ func (s *ExamService) RedoExam(
 		return nil, err
 	}
 
-	// reset user_answer
 	for i := range questions {
 		questions[i].UserAnswer = nil
 	}
@@ -130,15 +128,9 @@ func (s *ExamService) GetMyExamSets(
 	return s.Repo.GetMyExamSets(userID)
 }
 
-func (s *ExamService) GetMyExamHistory(
-	userID int,
-) ([]model.ExamAttemptItem, error) {
-
-	return s.Repo.GetMyExamAttempts(userID)
-}
-
-func (s *ExamService) GetQuestionsByExamSet(
+func (s *ExamService) GetExamQuestionsForUser(
 	examSetID int64,
+	userID int,
 ) ([]model.QuestionDTO, error) {
 
 	tx, err := s.DB.Begin()
@@ -147,14 +139,18 @@ func (s *ExamService) GetQuestionsByExamSet(
 	}
 	defer tx.Rollback()
 
-	questions, err := s.Repo.GetQuestionsByExamSet(tx, examSetID)
+	exam, err := s.Repo.GetExamSetByID(tx, examSetID)
 	if err != nil {
 		return nil, err
 	}
 
-	// vì đây là API xem đề → chưa có user_answer
-	for i := range questions {
-		questions[i].UserAnswer = nil
+	if !exam.IsPublic && exam.CreatedBy != userID {
+		return nil, errors.New("forbidden")
+	}
+
+	questions, err := s.Repo.GetQuestionsByExamSet(tx, examSetID)
+	if err != nil {
+		return nil, err
 	}
 
 	return questions, tx.Commit()

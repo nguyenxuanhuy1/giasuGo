@@ -20,14 +20,16 @@ create index idx_users_email on
    );
 
 create table exam_sets (
-   id         bigserial primary key,
-   name       varchar(255) not null,
-   created_by integer not null
+   id          bigserial primary key,
+   name        varchar(255) not null,
+   school_name varchar(255),
+   extend      varchar(255),
+   created_by  integer not null
       references users ( id )
          on delete cascade,
-   is_public  boolean default false,         -- PUBLIC / PRIVATE
+   is_public   boolean default false,         -- PUBLIC / PRIVATE
 
-   created_at timestamptz default now()
+   created_at  timestamptz default now()
 );
 
 create table exam_questions (

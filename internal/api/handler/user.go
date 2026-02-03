@@ -16,9 +16,9 @@ import (
 )
 
 type GoogleUserInfo struct {
-	ID            string `json:"id"`
+	Sub           string `json:"sub"`
 	Email         string `json:"email"`
-	VerifiedEmail bool   `json:"verified_email"`
+	EmailVerified bool   `json:"email_verified"`
 	Name          string `json:"name"`
 	Picture       string `json:"picture"`
 }
@@ -28,7 +28,6 @@ type RefreshTokenRequest struct {
 }
 
 /*  GOOGLE LOGIN  */
-
 func GoogleLogin(c *gin.Context) {
 	url := config.GoogleOAuthConfig.AuthCodeURL(
 		"state",
@@ -38,8 +37,10 @@ func GoogleLogin(c *gin.Context) {
 }
 
 func GoogleCallback(c *gin.Context) {
+
 	redirectBase := config.Config.FrontendAuthRedirectURL
 	code := c.Query("code")
+
 	if code == "" {
 		c.Redirect(http.StatusTemporaryRedirect,
 			redirectBase+"?error=missing_code")
@@ -53,7 +54,6 @@ func GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	// API chuẩn OpenID
 	resp, err := http.Get(
 		"https://openidconnect.googleapis.com/v1/userinfo?access_token=" + token.AccessToken,
 	)
@@ -78,17 +78,20 @@ func GoogleCallback(c *gin.Context) {
 		return
 	}
 
-	username := googleUser.Name
+	if !googleUser.EmailVerified {
+		c.Redirect(http.StatusTemporaryRedirect,
+			redirectBase+"?error=email_not_verified")
+		return
+	}
 
 	userRepo := repository.NewUserRepository(config.DB)
 	user, err := userRepo.FindOrCreateByGoogle(
-		googleUser.ID,
+		googleUser.Sub,
 		googleUser.Email,
-		username,
+		googleUser.Name,
 		googleUser.Picture,
 	)
 	if err != nil {
-		fmt.Println("FindOrCreateByGoogle:", err)
 		c.Redirect(http.StatusTemporaryRedirect,
 			redirectBase+"?error=create_user_failed")
 		return
@@ -119,6 +122,7 @@ func GoogleCallback(c *gin.Context) {
 		accessToken,
 		refreshToken,
 	)
+
 	c.Redirect(http.StatusTemporaryRedirect, redirectURL)
 }
 

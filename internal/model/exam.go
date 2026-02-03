@@ -6,10 +6,12 @@ import (
 )
 
 type SubmitExamRequest struct {
-	Subject   string        `json:"subject"`
-	ExamName  string        `json:"exam_name"`
-	IsPublic  bool          `json:"is_public"`
-	Questions []QuestionDTO `json:"questions"`
+	Subject    string        `json:"subject"`
+	ExamName   string        `json:"exam_name"`
+	SchoolName string        `json:"school_name"`
+	Extend     string        `json:"extend"`
+	IsPublic   bool          `json:"is_public"`
+	Questions  []QuestionDTO `json:"questions"`
 }
 
 type QuestionDTO struct {
@@ -23,15 +25,18 @@ type QuestionDTO struct {
 	UserAnswer    interface{}      `json:"user_answer"`
 }
 type ExamSet struct {
-	ID       int64  `json:"id"`
-	Name     string `json:"name"`
-	IsPublic bool   `json:"is_public"`
+	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	IsPublic  bool   `json:"is_public"`
+	CreatedBy int    `json:"created_by"`
 }
 type ExamSetItem struct {
-	ID        int64     `json:"id"`
-	Name      string    `json:"name"`
-	IsPublic  bool      `json:"is_public"`
-	CreatedAt time.Time `json:"created_at"`
+	ID         int64     `json:"id"`
+	Name       string    `json:"name"`
+	SchoolName string    `json:"school_name"`
+	Extend     string    `json:"extend"`
+	IsPublic   bool      `json:"is_public"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 type ExamAttemptItem struct {
 	AttemptID   int64      `json:"attempt_id"`

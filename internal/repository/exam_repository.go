@@ -18,16 +18,18 @@ func NewExamRepo(db *sql.DB) *ExamRepo {
 func (r *ExamRepo) CreateExamSet(
 	tx *sql.Tx,
 	name string,
+	schoolName string,
+	extend string,
 	userID int,
 	isPublic bool,
 ) (int64, error) {
 
 	var id int64
 	err := tx.QueryRow(`
-		insert into exam_sets (name, created_by, is_public)
-		values ($1,$2,$3)
+		insert into exam_sets (name, school_name, extend, created_by, is_public)
+		values ($1, $2, $3, $4, $5)
 		returning id
-	`, name, userID, isPublic).Scan(&id)
+	`, name, schoolName, extend, userID, isPublic).Scan(&id)
 
 	return id, err
 }
@@ -96,13 +98,23 @@ func (r *ExamRepo) GetExamSetByID(
 
 	var e model.ExamSet
 	err := tx.QueryRow(`
-		select id, name, is_public
+		select
+			id,
+			name,
+			is_public,
+			created_by
 		from exam_sets
 		where id = $1
-	`, examSetID).Scan(&e.ID, &e.Name, &e.IsPublic)
+	`, examSetID).Scan(
+		&e.ID,
+		&e.Name,
+		&e.IsPublic,
+		&e.CreatedBy,
+	)
 
 	return &e, err
 }
+
 func (r *ExamRepo) GetQuestionsByExamSet(
 	tx *sql.Tx,
 	examSetID int64,
@@ -153,6 +165,8 @@ func (r *ExamRepo) GetMyExamSets(
 		select
 			id,
 			name,
+			school_name,
+			extend,
 			is_public,
 			created_at
 		from exam_sets
@@ -170,53 +184,14 @@ func (r *ExamRepo) GetMyExamSets(
 		if err := rows.Scan(
 			&e.ID,
 			&e.Name,
+			&e.SchoolName,
+			&e.Extend,
 			&e.IsPublic,
 			&e.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
 		result = append(result, e)
-	}
-
-	return result, nil
-}
-
-func (r *ExamRepo) GetMyExamAttempts(
-	userID int,
-) ([]model.ExamAttemptItem, error) {
-
-	rows, err := r.DB.Query(`
-		select
-			ea.id,
-			es.id,
-			es.name,
-			es.is_public,
-			ea.started_at,
-			ea.submitted_at
-		from exam_attempts ea
-		join exam_sets es on es.id = ea.exam_set_id
-		where ea.user_id = $1
-		order by ea.started_at desc
-	`, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var result []model.ExamAttemptItem
-	for rows.Next() {
-		var item model.ExamAttemptItem
-		if err := rows.Scan(
-			&item.AttemptID,
-			&item.ExamSetID,
-			&item.ExamName,
-			&item.IsPublic,
-			&item.StartedAt,
-			&item.SubmittedAt,
-		); err != nil {
-			return nil, err
-		}
-		result = append(result, item)
 	}
 
 	return result, nil
