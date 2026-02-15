@@ -256,3 +256,26 @@ func (r *ExamRepo) GetPublicExamSetsPaginated(
 		},
 	)
 }
+func (r *ExamRepo) UpdateExamSet(
+	id int64,
+	req model.UpdateExamSetRequest,
+) error {
+
+	_, err := r.DB.Exec(`
+		update exam_sets
+		set
+			name = $1,
+			school_name = $2,
+			extend = $3,
+			is_public = $4
+		where id = $5
+	`,
+		req.Name,
+		req.SchoolName,
+		req.Extend,
+		req.IsPublic,
+		id,
+	)
+
+	return err
+}

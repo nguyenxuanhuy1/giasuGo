@@ -137,3 +137,38 @@ func GetPublicExamsHandler(
 		c.JSON(http.StatusOK, result)
 	}
 }
+func UpdateExamSetHandler(
+	examService *service.ExamService,
+) gin.HandlerFunc {
+
+	return func(c *gin.Context) {
+
+		idParam := c.Param("id")
+		id, err := strconv.ParseInt(idParam, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": "invalid id",
+			})
+			return
+		}
+
+		var req model.UpdateExamSetRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		if err := examService.UpdateExamSet(id, req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, gin.H{
+			"message": "exam updated successfully",
+		})
+	}
+}

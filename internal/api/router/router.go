@@ -86,6 +86,10 @@ func SetupRouter() *gin.Engine {
 			"/delete/post/:id",
 			handler.DeletePost(postRepo, imageRepo),
 		)
+		admin.POST(
+			"/exams/update/:id",
+			handler.UpdateExamSetHandler(examService),
+		)
 	}
 
 	return r

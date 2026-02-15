@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+	"fmt"
 	"traingolang/internal/model"
 	"traingolang/internal/repository"
 	"traingolang/internal/util"
@@ -30,7 +31,9 @@ func (s *ExamService) SubmitExam(
 		return 0, 0, err
 	}
 	defer tx.Rollback()
-
+	if req.IsPublic != 0 && req.IsPublic != 1 {
+		return 0, 0, fmt.Errorf("invalid is_public value")
+	}
 	examSetID, err := s.Repo.CreateExamSet(
 		tx,
 		req.ExamName,
@@ -137,4 +140,18 @@ func (s *ExamService) GetPublicExamSets(
 		offset,
 		limit,
 	)
+}
+func (s *ExamService) UpdateExamSet(
+	id int64,
+	req model.UpdateExamSetRequest,
+) error {
+
+	// Admin được phép set 0,1,2
+	if req.IsPublic != 0 &&
+		req.IsPublic != 1 &&
+		req.IsPublic != 2 {
+		return fmt.Errorf("invalid is_public value")
+	}
+
+	return s.Repo.UpdateExamSet(id, req)
 }

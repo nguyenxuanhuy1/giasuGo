@@ -51,3 +51,9 @@ type PublicExamListRequest struct {
 	Page     int    `json:"page"`
 	PageSize int    `json:"page_size"`
 }
+type UpdateExamSetRequest struct {
+	Name       string `json:"name"`
+	SchoolName string `json:"school_name"`
+	Extend     string `json:"extend"`
+	IsPublic   int    `json:"is_public"`
+}
