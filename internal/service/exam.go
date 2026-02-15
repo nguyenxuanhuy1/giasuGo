@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"traingolang/internal/model"
 	"traingolang/internal/repository"
+	"traingolang/internal/util"
 )
 
 type ExamService struct {
@@ -124,4 +125,16 @@ func (s *ExamService) GetMyExamSets(
 ) ([]model.ExamSetItem, error) {
 
 	return s.Repo.GetMyExamSets(userID)
+}
+func (s *ExamService) GetPublicExamSets(
+	req model.PublicExamListRequest,
+) (*util.PaginatedResponse[model.ExamSetItem], error) {
+
+	offset, limit := util.NewPagination(req.Page, req.PageSize)
+
+	return s.Repo.GetPublicExamSetsPaginated(
+		req.Search,
+		offset,
+		limit,
+	)
 }

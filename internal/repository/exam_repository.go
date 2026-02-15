@@ -2,6 +2,8 @@ package repository
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"traingolang/internal/model"
 	"traingolang/internal/util"
@@ -195,4 +197,62 @@ func (r *ExamRepo) GetMyExamSets(
 	}
 
 	return result, nil
+}
+func (r *ExamRepo) GetPublicExamSetsPaginated(
+	search string,
+	offset int,
+	limit int,
+) (*util.PaginatedResponse[model.ExamSetItem], error) {
+
+	baseQuery := `
+		from exam_sets
+		where is_public = 2
+	`
+
+	var filterArgs []interface{}
+	argIndex := 1
+
+	if strings.TrimSpace(search) != "" {
+		baseQuery += fmt.Sprintf(" and name ilike $%d", argIndex)
+		filterArgs = append(filterArgs, "%"+search+"%")
+		argIndex++
+	}
+
+	countQuery := "select count(*) " + baseQuery
+
+	query := `
+		select
+			id,
+			name,
+			school_name,
+			extend,
+			is_public,
+			created_at
+	` + baseQuery + `
+		order by created_at desc
+		limit $` + fmt.Sprint(argIndex) + `
+		offset $` + fmt.Sprint(argIndex+1)
+
+	return util.Paginate(
+		r.DB,
+		query,
+		countQuery,
+		filterArgs,
+		offset,
+		limit,
+		func(rows *sql.Rows) (*model.ExamSetItem, error) {
+			var e model.ExamSetItem
+			if err := rows.Scan(
+				&e.ID,
+				&e.Name,
+				&e.SchoolName,
+				&e.Extend,
+				&e.IsPublic,
+				&e.CreatedAt,
+			); err != nil {
+				return nil, err
+			}
+			return &e, nil
+		},
+	)
 }

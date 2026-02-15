@@ -46,3 +46,8 @@ type ExamAttemptItem struct {
 	StartedAt   time.Time  `json:"started_at"`
 	SubmittedAt *time.Time `json:"submitted_at,omitempty"`
 }
+type PublicExamListRequest struct {
+	Search   string `json:"search"`
+	Page     int    `json:"page"`
+	PageSize int    `json:"page_size"`
+}

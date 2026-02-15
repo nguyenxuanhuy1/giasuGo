@@ -110,3 +110,30 @@ func GetMyExamSetsHandler(examService *service.ExamService) gin.HandlerFunc {
 		})
 	}
 }
+
+func GetPublicExamsHandler(
+	examService *service.ExamService,
+) gin.HandlerFunc {
+
+	return func(c *gin.Context) {
+
+		var req model.PublicExamListRequest
+
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		result, err := examService.GetPublicExamSets(req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"error": err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusOK, result)
+	}
+}

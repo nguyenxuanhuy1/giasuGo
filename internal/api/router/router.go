@@ -17,7 +17,7 @@ func SetupRouter() *gin.Engine {
 
 	// Cấu hình CORS
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"}, // Cho phép tất cả domain (production nên chỉ định cụ thể)
+		AllowOrigins:     []string{"http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -36,7 +36,7 @@ func SetupRouter() *gin.Engine {
 		public.GET("/auth/google/callback", handler.GoogleCallback)
 		public.POST("/auth/refresh", handler.RefreshToken)
 		public.GET("/posts/options", handler.GetPostOptionsHandler(postRepo))
-
+		public.POST("/exams/public", handler.GetPublicExamsHandler(examService))
 	}
 
 	// AUTH ROUTES (BẮT BUỘC TOKEN)
@@ -57,8 +57,6 @@ func SetupRouter() *gin.Engine {
 		)
 
 		authGroup.GET("/user/info", handler.Profile)
-		authGroup.POST("/match/create", handler.CreateMatch)
-		authGroup.POST("/match/join", handler.JoinMatch)
 		authGroup.POST("/upload", handler.UploadHandler)
 		authGroup.GET("/exam-sets/redo/:id", handler.RedoExamHandler(examService))
 		authGroup.GET("/exams/history", handler.GetMyExamSetsHandler(examService))
