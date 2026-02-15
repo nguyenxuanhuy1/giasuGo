@@ -21,7 +21,7 @@ func (r *ExamRepo) CreateExamSet(
 	schoolName string,
 	extend string,
 	userID int,
-	isPublic bool,
+	isPublic int,
 ) (int64, error) {
 
 	var id int64

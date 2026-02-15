@@ -10,7 +10,7 @@ type SubmitExamRequest struct {
 	ExamName   string        `json:"exam_name"`
 	SchoolName string        `json:"school_name"`
 	Extend     string        `json:"extend"`
-	IsPublic   bool          `json:"is_public"`
+	IsPublic   int           `json:"is_public"` // 0=PRIVATE, 1=PENDING, 2=APPROVED, 3=REJECTED
 	Questions  []QuestionDTO `json:"questions"`
 }
 
@@ -27,7 +27,7 @@ type QuestionDTO struct {
 type ExamSet struct {
 	ID        int64  `json:"id"`
 	Name      string `json:"name"`
-	IsPublic  bool   `json:"is_public"`
+	IsPublic  int    `json:"is_public"` // 0=PRIVATE, 1=PENDING, 2=APPROVED, 3=REJECTED
 	CreatedBy int    `json:"created_by"`
 }
 type ExamSetItem struct {
@@ -35,14 +35,14 @@ type ExamSetItem struct {
 	Name       string    `json:"name"`
 	SchoolName string    `json:"school_name"`
 	Extend     string    `json:"extend"`
-	IsPublic   bool      `json:"is_public"`
+	IsPublic   int       `json:"is_public"` // 0=PRIVATE, 1=PENDING, 2=APPROVED, 3=REJECTED
 	CreatedAt  time.Time `json:"created_at"`
 }
 type ExamAttemptItem struct {
 	AttemptID   int64      `json:"attempt_id"`
 	ExamSetID   int64      `json:"exam_set_id"`
 	ExamName    string     `json:"exam_name"`
-	IsPublic    bool       `json:"is_public"`
+	IsPublic    int        `json:"is_public"` // 0=PRIVATE, 1=PENDING, 2=APPROVED, 3=REJECTED
 	StartedAt   time.Time  `json:"started_at"`
 	SubmittedAt *time.Time `json:"submitted_at,omitempty"`
 }

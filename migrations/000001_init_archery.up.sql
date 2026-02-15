@@ -27,8 +27,7 @@ create table exam_sets (
    created_by  integer not null
       references users ( id )
          on delete cascade,
-   is_public   boolean default false,         -- PUBLIC / PRIVATE
-
+   is_public   smallint default 0,     --0	PRIVATE 1	PENDING 2	APPROVED 3	REJECTED 
    created_at  timestamptz default now()
 );
 
@@ -67,5 +66,5 @@ create table exam_answers (
    question_id bigint not null
       references exam_questions ( id )
          on delete cascade,
-   answer      jsonb not null                -- đáp án user chọn
+   answer      jsonb               -- đáp án user chọn
 );

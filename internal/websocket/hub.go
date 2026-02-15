@@ -1,6 +1,9 @@
 package websocket
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type Message struct {
 	MatchID int
@@ -20,7 +23,8 @@ type Hub struct {
 	Unregister chan *Client
 	Broadcast  chan Message
 
-	Players map[uint16]*Player //  map lưu state player
+	Players   map[uint16]*Player //  map lưu state player
+	PlayersMu sync.RWMutex       // Mutex để bảo vệ Players map
 }
 
 func NewHub() *Hub {

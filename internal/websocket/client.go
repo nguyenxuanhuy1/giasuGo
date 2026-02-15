@@ -85,6 +85,10 @@ func (c *Client) handleInput(data []byte) {
 		return
 	}
 
+	// Lock để đọc/ghi Players map an toàn
+	c.Hub.PlayersMu.Lock()
+	defer c.Hub.PlayersMu.Unlock()
+
 	// lấy player state
 	p := c.Hub.Players[c.UserID]
 	if p == nil {
@@ -168,9 +172,11 @@ func (c *Client) WritePump() {
 				c.Conn.WriteMessage(gorilla.CloseMessage, []byte{})
 				return
 			}
+			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			c.Conn.WriteMessage(gorilla.BinaryMessage, msg)
 
 		case <-ticker.C:
+			c.Conn.SetWriteDeadline(time.Now().Add(writeWait))
 			c.Conn.WriteMessage(gorilla.PingMessage, nil)
 		}
 	}

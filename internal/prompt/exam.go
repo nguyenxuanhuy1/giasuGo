@@ -46,7 +46,7 @@ JSON FORMAT:
       "order": 1,
       "level": "section|context|question",
       "parent_order": null,
-      "type": "single|multiple|essay",
+      "type": "single|multiple|true_false|fill|essay",
       "content": "Original content (verbatim)",
       "options": [{"label": "A", "value": "Original option text"}]
     }
@@ -66,9 +66,11 @@ RULES:
    - question → order of its context (or section if no context)
 
 3. TYPE:
-   - single: one correct answer
-   - multiple: multiple correct answers
-   - essay: written response
+   - single: one correct answer (A, B, C, D...)
+   - multiple: multiple correct answers (A, B, C, D...)
+   - true_false: multiple statements (a, b, c, d...) where each statement requires True or False
+   - fill: short answer question (number, word, formula, expression)
+   - essay: long written response
 
 4. CONTENT:
    - Copy VERBATIM (even passages longer than 100+ lines)
@@ -76,8 +78,24 @@ RULES:
    - DO NOT use double backslashes: \\frac (INVALID)
 
 5. OPTIONS:
-   - Multiple choice: include ALL options A, B, C, D...
-   - Essay questions: []
+
+- single / multiple:
+  - Include ALL options (A, B, C, D...)
+  - Copy VERBATIM
+
+- true_false:
+  - Each statement (a, b, c, d...) must be included in "options"
+  - Label must be: "a", "b", "c", ...
+  - Value must be the FULL original statement (verbatim)
+  - DO NOT split statements into separate questions
+
+- fill:
+  - options must be []
+  - DO NOT create fake answer options
+  - The answer must be entered by user manually
+
+- essay:
+  - options must be []
 
 MATH EXAMPLE:
 {
