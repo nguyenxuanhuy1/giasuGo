@@ -28,12 +28,14 @@ func SetupRouter() *gin.Engine {
 	imageRepo := repository.NewImageRepository(config.DB)
 	examService := service.NewExamService(config.DB)
 
+	r.GET("/oauth2/authorization/google", handler.GoogleLogin)
+	r.GET("/oauth2/callback/google", handler.GoogleCallback)
 	// PUBLIC ROUTES (KHÔNG CẦN TOKEN)
 	public := r.Group("/api")
 	{
 		// Google OAuth routes
-		public.GET("/auth/google", handler.GoogleLogin)
-		public.GET("/auth/google/callback", handler.GoogleCallback)
+		// public.GET("/oauth2/authorization/google", handler.GoogleLogin)
+		// public.GET("/oauth2/callback/google", handler.GoogleCallback)
 		public.POST("/auth/refresh", handler.RefreshToken)
 		public.GET("/posts/options", handler.GetPostOptionsHandler(postRepo))
 		public.POST("/exams/public", handler.GetPublicExamsHandler(examService))
