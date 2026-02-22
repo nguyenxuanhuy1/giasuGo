@@ -137,6 +137,30 @@ func GetPublicExamsHandler(
 		c.JSON(http.StatusOK, result)
 	}
 }
+
+func GetAdminExamsHandler(
+	examService *service.ExamService,
+) gin.HandlerFunc {
+
+	return func(c *gin.Context) {
+
+		var req model.AdminExamListRequest
+
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		result, err := examService.GetAdminExamSets(req)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		c.JSON(http.StatusOK, result)
+	}
+}
+
 func UpdateExamSetHandler(
 	examService *service.ExamService,
 ) gin.HandlerFunc {

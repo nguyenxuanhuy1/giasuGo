@@ -213,6 +213,72 @@ func (r *ExamRepo) GetPublicExamSetsPaginated(
 	argIndex := 1
 
 	if strings.TrimSpace(search) != "" {
+		baseQuery += fmt.Sprintf(
+			" and (name ilike $%d or school_name ilike $%d)",
+			argIndex,
+			argIndex,
+		)
+		filterArgs = append(filterArgs, "%"+search+"%")
+		argIndex++
+	}
+
+	countQuery := "select count(*) " + baseQuery
+
+	query := `
+		select
+			id,
+			name,
+			school_name,
+			extend,
+			is_public,
+			created_at
+	` + baseQuery + `
+		order by created_at desc
+		limit $` + fmt.Sprint(argIndex) + `
+		offset $` + fmt.Sprint(argIndex+1)
+
+	return util.Paginate(
+		r.DB,
+		query,
+		countQuery,
+		filterArgs,
+		offset,
+		limit,
+		func(rows *sql.Rows) (*model.ExamSetItem, error) {
+			var e model.ExamSetItem
+			if err := rows.Scan(
+				&e.ID,
+				&e.Name,
+				&e.SchoolName,
+				&e.Extend,
+				&e.IsPublic,
+				&e.CreatedAt,
+			); err != nil {
+				return nil, err
+			}
+			return &e, nil
+		},
+	)
+}
+
+func (r *ExamRepo) GetExamSetsPaginated(
+	search string,
+	isPublic int,
+	offset int,
+	limit int,
+) (*util.PaginatedResponse[model.ExamSetItem], error) {
+
+	baseQuery := `from exam_sets where 1=1`
+	var filterArgs []interface{}
+	argIndex := 1
+
+	if isPublic != 0 {
+		baseQuery += fmt.Sprintf(" and is_public = $%d", argIndex)
+		filterArgs = append(filterArgs, isPublic)
+		argIndex++
+	}
+
+	if strings.TrimSpace(search) != "" {
 		baseQuery += fmt.Sprintf(" and name ilike $%d", argIndex)
 		filterArgs = append(filterArgs, "%"+search+"%")
 		argIndex++
@@ -256,6 +322,7 @@ func (r *ExamRepo) GetPublicExamSetsPaginated(
 		},
 	)
 }
+
 func (r *ExamRepo) UpdateExamSet(
 	id int64,
 	req model.UpdateExamSetRequest,

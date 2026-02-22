@@ -25,12 +25,12 @@ func SetupRouter() *gin.Engine {
 	}))
 
 	postRepo := repository.NewPostRepo(config.DB)
-	imageRepo := repository.NewImageRepository(config.DB)
+	// imageRepo := repository.NewImageRepository(config.DB)
 	examService := service.NewExamService(config.DB)
 
 	r.GET("/oauth2/authorization/google", handler.GoogleLogin)
 	r.GET("/oauth2/callback/google", handler.GoogleCallback)
-	// PUBLIC ROUTES (KHÔNG CẦN TOKEN)
+	// PUBLIC ROUTES (KHÔNG CẦN TOKEN)9
 	public := r.Group("/api")
 	{
 		// Google OAuth routes
@@ -72,22 +72,8 @@ func SetupRouter() *gin.Engine {
 		auth.AdminOnly(),
 	)
 	{
-		admin.POST(
-			"/create/post",
-			auth.LimitUploadSize(1<<20),
-			handler.CreatePost(postRepo, imageRepo),
-		)
+		admin.POST("/exams", handler.GetAdminExamsHandler(examService))
 
-		admin.POST(
-			"/update/post/:id",
-			auth.LimitUploadSize(1<<20),
-			handler.UpdatePost(postRepo, imageRepo),
-		)
-
-		admin.POST(
-			"/delete/post/:id",
-			handler.DeletePost(postRepo, imageRepo),
-		)
 		admin.POST(
 			"/exams/update/:id",
 			handler.UpdateExamSetHandler(examService),

@@ -141,6 +141,21 @@ func (s *ExamService) GetPublicExamSets(
 		limit,
 	)
 }
+
+func (s *ExamService) GetAdminExamSets(
+	req model.AdminExamListRequest,
+) (*util.PaginatedResponse[model.ExamSetItem], error) {
+
+	offset, limit := util.NewPagination(req.Page, req.PageSize)
+
+	return s.Repo.GetExamSetsPaginated(
+		req.Search,
+		req.IsPublic,
+		offset,
+		limit,
+	)
+}
+
 func (s *ExamService) UpdateExamSet(
 	id int64,
 	req model.UpdateExamSetRequest,
