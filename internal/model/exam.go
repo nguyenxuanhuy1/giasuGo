@@ -61,5 +61,5 @@ type AdminExamListRequest struct {
 	Page     int    `json:"page"`
 	PageSize int    `json:"page_size"`
 	Search   string `json:"search"`
-	IsPublic int    `json:"is_public"`
+	IsPublic *int   `json:"is_public"`
 }

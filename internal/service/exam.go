@@ -155,7 +155,6 @@ func (s *ExamService) GetAdminExamSets(
 		limit,
 	)
 }
-
 func (s *ExamService) UpdateExamSet(
 	id int64,
 	req model.UpdateExamSetRequest,

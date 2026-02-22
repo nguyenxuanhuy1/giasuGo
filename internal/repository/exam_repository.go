@@ -263,7 +263,7 @@ func (r *ExamRepo) GetPublicExamSetsPaginated(
 
 func (r *ExamRepo) GetExamSetsPaginated(
 	search string,
-	isPublic int,
+	isPublic *int,
 	offset int,
 	limit int,
 ) (*util.PaginatedResponse[model.ExamSetItem], error) {
@@ -272,14 +272,20 @@ func (r *ExamRepo) GetExamSetsPaginated(
 	var filterArgs []interface{}
 	argIndex := 1
 
-	if isPublic != 0 {
+	// Filter theo is_public nếu có truyền
+	if isPublic != nil {
 		baseQuery += fmt.Sprintf(" and is_public = $%d", argIndex)
-		filterArgs = append(filterArgs, isPublic)
+		filterArgs = append(filterArgs, *isPublic)
 		argIndex++
 	}
 
+	// Search theo name + school_name
 	if strings.TrimSpace(search) != "" {
-		baseQuery += fmt.Sprintf(" and name ilike $%d", argIndex)
+		baseQuery += fmt.Sprintf(
+			" and (name ilike $%d or school_name ilike $%d)",
+			argIndex,
+			argIndex,
+		)
 		filterArgs = append(filterArgs, "%"+search+"%")
 		argIndex++
 	}
